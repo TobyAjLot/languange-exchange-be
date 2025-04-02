@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  email            String         @unique
+  password         String
+  name             String
+  nativeLanguage   String
+  learningLanguage String
+  proficiency      String // e.g., Beginner, Intermediate, Advanced
+  availability     Availability[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  sentRequests     SessionRequest[] @relation("FromUser")
+  receivedRequests SessionRequest[] @relation("ToUser")
+}
+
+model Availability {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String @db.ObjectId
+  day      String // e.g., 'Monday'
+  fromTime String // e.g., '14:00'
+  toTime   String // e.g., '15:00'
+  user     User   @relation(fields: [userId], references: [id])
+}
+
+model SessionRequest {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  fromUserId String   @db.ObjectId
+  toUserId   String   @db.ObjectId
+  message    String
+  status     String // 'pending', 'accepted', 'declined'
+  createdAt  DateTime @default(now())
+
+  fromUser User @relation("FromUser", fields: [fromUserId], references: [id])
+  toUser   User @relation("ToUser", fields: [toUserId], references: [id])
+}
